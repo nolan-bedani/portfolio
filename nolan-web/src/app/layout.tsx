@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Inter } from "next/font/google";
+import FloatingCV from "../components/FloatingCV"; // ou "../components/FloatingCV"
+
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
@@ -8,12 +10,19 @@ export const metadata: Metadata = {
   description: "Portfolio Réseaux & DevOps",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html lang="fr" suppressHydrationWarning>
-<body className={`bg-app ${inter.className}`}>{children}</body>
+      <body className={`bg-app ${inter.className}`}>
+        {children}
 
-
+        {/* Bouton CV flottant rendu côté client */}
+        <FloatingCV />
+      </body>
     </html>
   );
 }

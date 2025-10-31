@@ -1,10 +1,22 @@
 "use client";
 
 import { useRef } from "react";
+import Image, { StaticImageData } from "next/image";
 import { motion, useInView, useScroll, useSpring } from "framer-motion";
-import { Building2, MapPin, Calendar, BadgeCheck } from "lucide-react";
+import {
+  BriefcaseBusiness as OrgIcon,
+  MapPin,
+  Calendar,
+  BadgeCheck,
+} from "lucide-react";
 
-/* --- Données (FR) --- */
+/* ====== Logos (dans /icons à la racine du projet) ====== */
+import anfsiLogo from "../../icons/anfsi.png";
+import parisLogo from "../../icons/Paris.svg";
+import mecaLogo from "../../icons/meca.png";
+import oppchainLogo from "../../icons/oppchain.png";
+
+/* --- Données --- */
 type Exp = {
   org: string;
   role: string;
@@ -12,6 +24,7 @@ type Exp = {
   location: string;
   bullets: string[];
   tags: string[];
+  logo?: StaticImageData | string; // png -> StaticImageData ; svg -> string
 };
 
 const EXPERIENCES: Exp[] = [
@@ -25,6 +38,7 @@ const EXPERIENCES: Exp[] = [
       "Automatisation d’environnements et bonnes pratiques DevOps au sein des équipes.",
     ],
     tags: ["CI/CD", "Automatisation", "DevOps", "Sécurité"],
+    logo: anfsiLogo,
   },
   {
     org: "Mairie de Paris Centre",
@@ -37,6 +51,7 @@ const EXPERIENCES: Exp[] = [
       "Support N2 (hotline) : diagnostic et résolution incidents réseau.",
     ],
     tags: ["Cisco", "VLAN", "STP", "VRF", "SNMP", "PKI"],
+    logo: parisLogo,
   },
   {
     org: "ISAE-Supméca (Institut supérieur de mécanique de Paris)",
@@ -49,6 +64,7 @@ const EXPERIENCES: Exp[] = [
       "Scripts Python d’automatisation pour tâches récurrentes.",
     ],
     tags: ["NAS", "Python", "Automatisation", "Supervision"],
+    logo: mecaLogo,
   },
   {
     org: "OPPCHAIN",
@@ -60,6 +76,7 @@ const EXPERIENCES: Exp[] = [
       "Sensibilisation marketing/stratégie et initiation à l’analyse de données.",
     ],
     tags: ["Web", "Startup", "Data"],
+    logo: oppchainLogo,
   },
 ];
 
@@ -102,7 +119,7 @@ export default function Experience() {
 
           <ul className="relative pl-10 space-y-10">
             {EXPERIENCES.map((exp, i) => (
-              <TimelineItem key={i} exp={exp} index={i} />
+              <TimelineItem key={i} exp={exp} />
             ))}
           </ul>
         </div>
@@ -112,9 +129,11 @@ export default function Experience() {
 }
 
 /* --- Item de timeline --- */
-function TimelineItem({ exp, index }: { exp: Exp; index: number }) {
+function TimelineItem({ exp }: { exp: Exp }) {
   const ref = useRef<HTMLLIElement | null>(null);
   const inView = useInView(ref, { margin: "0px 0px -10% 0px", amount: 0.6 });
+
+  const isSvg = typeof exp.logo === "string" && exp.logo.toLowerCase().endsWith(".svg");
 
   return (
     <motion.li
@@ -125,56 +144,81 @@ function TimelineItem({ exp, index }: { exp: Exp; index: number }) {
       viewport={{ once: true, amount: 0.6 }}
       className="relative"
     >
-      {/* pastille alignée sur le rail */}
+      {/* Pastille alignée + halo */}
       <motion.span
-        className="absolute left-4 -translate-x-1/2 top-6 inline-flex h-3.5 w-3.5 items-center justify-center rounded-full bg-primary/30 ring-4 ring-primary/10"
+        className="
+          absolute -left-8 -translate-x-1/2 top-6
+          inline-grid h-3.5 w-3.5 place-items-center
+          rounded-full bg-primary/30 ring-4 ring-primary/10
+        "
         animate={inView ? { scale: [0.9, 1.15, 1] } : { scale: 0.9 }}
         transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
         aria-hidden
       >
-        <span className="block h-1.5 w-1.5 rounded-full bg-primary" />
+        <span className="block h-1.5 w-1.5 rounded-full bg-primary shadow-[0_0_12px_rgba(170,184,255,.85)]" />
       </motion.span>
 
-      {/* carte avec halo, fond uni sans blur */}
-      <div className="glow-group group">
-        <span className="glow-border rounded-2xl" aria-hidden />
-        <div className="relative z-[1] rounded-2xl border border-white/10 bg-neutral-900/60 p-4 md:p-5 transition-transform duration-300 group-hover:scale-[1.01]">
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-neutral-300">
-            <span className="inline-flex items-center gap-2">
-              <Building2 size={16} className="text-primary" />
-              <span className="font-medium text-white">{exp.org}</span>
-            </span>
-            <span className="inline-flex items-center gap-1.5 text-neutral-400">
-              <Calendar size={16} />
-              {exp.period}
-            </span>
-            <span className="inline-flex items-center gap-1.5 text-neutral-400">
-              <MapPin size={16} />
-              {exp.location}
-            </span>
-          </div>
-
-          <h3 className="mt-2 text-lg font-semibold text-white">{exp.role}</h3>
-
-          <ul className="mt-3 space-y-2 text-neutral-300">
-            {exp.bullets.map((b, i) => (
-              <li key={i} className="flex gap-2">
-                <BadgeCheck size={16} className="mt-0.5 shrink-0 text-primary" />
-                <span>{b}</span>
-              </li>
-            ))}
-          </ul>
-
-          <div className="mt-3 flex flex-wrap gap-2">
-            {exp.tags.map((t) => (
+      {/* Carte */}
+      <div className="rounded-2xl border border-white/10 bg-white/5 p-4 md:p-5 backdrop-blur-[1px]">
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-neutral-300">
+          {/* Logo + nom (même gabarit que le titre) */}
+          <span className="inline-flex items-center gap-2">
+            {exp.logo ? (
               <span
-                key={t}
-                className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs text-neutral-300"
+                className="
+                  relative grid h-8 w-8 place-items-center overflow-hidden
+                  rounded-md bg-white ring-1 ring-white/20 shadow-sm
+                "
               >
-                {t}
+                <Image
+                  src={exp.logo}
+                  alt=""
+                  width={28}
+                  height={28}
+                  className="object-contain"
+                  unoptimized={isSvg}
+                />
               </span>
-            ))}
-          </div>
+            ) : (
+              <OrgIcon size={20} className="text-primary" />
+            )}
+            <span className="font-semibold text-white text-lg">{exp.org}</span>
+          </span>
+
+          {/* Date (même gabarit que le titre) */}
+          <span className="inline-flex items-center gap-1.5 text-lg font-semibold text-neutral-300">
+            <Calendar size={18} />
+            {exp.period}
+          </span>
+
+          {/* Localisation : un cran en dessous pour garder une hiérarchie */}
+          <span className="inline-flex items-center gap-1.5 text-base text-neutral-400">
+            <MapPin size={16} />
+            {exp.location}
+          </span>
+        </div>
+
+        {/* Intitulé du poste */}
+        <h3 className="mt-2 text-lg font-semibold text-white">{exp.role}</h3>
+
+        <ul className="mt-3 space-y-2 text-neutral-300">
+          {exp.bullets.map((b, i) => (
+            <li key={i} className="flex gap-2">
+              <BadgeCheck size={16} className="mt-0.5 shrink-0 text-primary" />
+              <span>{b}</span>
+            </li>
+          ))}
+        </ul>
+
+        <div className="mt-3 flex flex-wrap gap-2">
+          {exp.tags.map((t) => (
+            <span
+              key={t}
+              className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs text-neutral-300"
+            >
+              {t}
+            </span>
+          ))}
         </div>
       </div>
     </motion.li>
