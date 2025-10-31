@@ -73,7 +73,7 @@ export default function Experience() {
   const sectionRef = useRef<HTMLDivElement | null>(null);
   const { scrollYProgress } = useScroll({
     target: sectionRef,
-    offset: ["start 10%", "end 80%"], // quand commence / finit le remplissage
+    offset: ["start 10%", "end 80%"],
   });
   const progress = useSpring(scrollYProgress, { stiffness: 120, damping: 20, mass: 0.35 });
 
@@ -125,58 +125,56 @@ function TimelineItem({ exp, index }: { exp: Exp; index: number }) {
       viewport={{ once: true, amount: 0.6 }}
       className="relative"
     >
-{/* pastille parfaitement alignée sur le rail */}
-<motion.span
-  className="
-    absolute left-4 -translate-x-1/2 top-6
-    inline-flex h-3.5 w-3.5 items-center justify-center
-    rounded-full bg-primary/30 ring-4 ring-primary/10
-  "
-  animate={inView ? { scale: [0.9, 1.15, 1] } : { scale: 0.9 }}
-  transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-  aria-hidden
->
-  <span className="block h-1.5 w-1.5 rounded-full bg-primary" />
-</motion.span>
+      {/* pastille alignée sur le rail */}
+      <motion.span
+        className="absolute left-4 -translate-x-1/2 top-6 inline-flex h-3.5 w-3.5 items-center justify-center rounded-full bg-primary/30 ring-4 ring-primary/10"
+        animate={inView ? { scale: [0.9, 1.15, 1] } : { scale: 0.9 }}
+        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+        aria-hidden
+      >
+        <span className="block h-1.5 w-1.5 rounded-full bg-primary" />
+      </motion.span>
 
-
-      {/* carte */}
-      <div className="rounded-2xl border border-white/10 bg-white/5 p-4 md:p-5 backdrop-blur-[1px]">
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-neutral-300">
-          <span className="inline-flex items-center gap-2">
-            <Building2 size={16} className="text-primary" />
-            <span className="font-medium text-white">{exp.org}</span>
-          </span>
-          <span className="inline-flex items-center gap-1.5 text-neutral-400">
-            <Calendar size={16} />
-            {exp.period}
-          </span>
-          <span className="inline-flex items-center gap-1.5 text-neutral-400">
-            <MapPin size={16} />
-            {exp.location}
-          </span>
-        </div>
-
-        <h3 className="mt-2 text-lg font-semibold text-white">{exp.role}</h3>
-
-        <ul className="mt-3 space-y-2 text-neutral-300">
-          {exp.bullets.map((b, i) => (
-            <li key={i} className="flex gap-2">
-              <BadgeCheck size={16} className="mt-0.5 shrink-0 text-primary" />
-              <span>{b}</span>
-            </li>
-          ))}
-        </ul>
-
-        <div className="mt-3 flex flex-wrap gap-2">
-          {exp.tags.map((t) => (
-            <span
-              key={t}
-              className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs text-neutral-300"
-            >
-              {t}
+      {/* carte avec halo, fond uni sans blur */}
+      <div className="glow-group group">
+        <span className="glow-border rounded-2xl" aria-hidden />
+        <div className="relative z-[1] rounded-2xl border border-white/10 bg-neutral-900/60 p-4 md:p-5 transition-transform duration-300 group-hover:scale-[1.01]">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-neutral-300">
+            <span className="inline-flex items-center gap-2">
+              <Building2 size={16} className="text-primary" />
+              <span className="font-medium text-white">{exp.org}</span>
             </span>
-          ))}
+            <span className="inline-flex items-center gap-1.5 text-neutral-400">
+              <Calendar size={16} />
+              {exp.period}
+            </span>
+            <span className="inline-flex items-center gap-1.5 text-neutral-400">
+              <MapPin size={16} />
+              {exp.location}
+            </span>
+          </div>
+
+          <h3 className="mt-2 text-lg font-semibold text-white">{exp.role}</h3>
+
+          <ul className="mt-3 space-y-2 text-neutral-300">
+            {exp.bullets.map((b, i) => (
+              <li key={i} className="flex gap-2">
+                <BadgeCheck size={16} className="mt-0.5 shrink-0 text-primary" />
+                <span>{b}</span>
+              </li>
+            ))}
+          </ul>
+
+          <div className="mt-3 flex flex-wrap gap-2">
+            {exp.tags.map((t) => (
+              <span
+                key={t}
+                className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs text-neutral-300"
+              >
+                {t}
+              </span>
+            ))}
+          </div>
         </div>
       </div>
     </motion.li>

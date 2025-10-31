@@ -80,3 +80,65 @@ body{ @apply text-neutral-100 overflow-x-hidden; }
 @media (prefers-reduced-motion: reduce) {
   .bg-aurora::before { animation: none; }
 }
+/* ========== Glow border réutilisable pour cartes ========== */
+@keyframes glow-rotate { to { transform: rotate(360deg); } }
+
+:root{
+  /* adapte à ta palette */
+  --glow-a: 104,122,255; /* #687aff */
+  --glow-b: 170,184,255; /* #aab8ff */
+}
+
+/* wrapper parent */
+.glow-group { position: relative; isolation: isolate; }
+
+/* couche de glow (en-dessous du contenu) */
+.glow-border {
+  pointer-events: none;
+  position: absolute;
+  inset: -1px;               /* déborde très légèrement pour couvrir la bordure */
+  border-radius: 1rem;        /* = rounded-2xl (adapte si besoin) */
+  z-index: 0;
+  overflow: hidden;
+}
+
+/* gradient animé (pause par défaut, tourne au hover) */
+.glow-border::before{
+  content:"";
+  position:absolute;
+  left:-50%; top:-50%;
+  width:200%; height:200%;
+  background-image:
+    conic-gradient(
+      from 0deg,
+      rgba(var(--glow-a), .45),
+      rgba(var(--glow-b), .25),
+      rgba(var(--glow-a), .45),
+      transparent 60%
+    );
+  filter: blur(10px);
+  animation: glow-rotate 6s linear infinite;
+  animation-play-state: paused;
+  opacity: .35;
+  transition: opacity .25s ease;
+}
+
+/* “passe-plat” pour recréer le fond sous le contenu et simuler la bordure lumineuse */
+.glow-border::after{
+  content:"";
+  position:absolute;
+  inset: 1px;
+  border-radius: calc(1rem - 1px);
+  background: transparent; /* on laisse le vrai fond au conteneur contenu */
+}
+
+/* activation au hover du parent */
+.glow-group:hover .glow-border::before{
+  animation-play-state: running;
+  opacity: .7;
+}
+
+/* accessibilité : pas d’animation si reduce-motion */
+@media (prefers-reduced-motion: reduce) {
+  .glow-border::before { animation: none; }
+}
