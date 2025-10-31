@@ -1,0 +1,16 @@
+@"
+node_modules/
+.next/
+out/
+dist/
+.vercel/
+.turbo/
+coverage/
+
+.env*
+!.env.example
+
+.vscode/
+.DS_Store
+Thumbs.db
+"@ > .gitignore
