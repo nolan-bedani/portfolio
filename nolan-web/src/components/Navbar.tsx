@@ -1,75 +1,111 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
-import { motion, useScroll, useSpring } from "framer-motion";
 
-type SectionId = "home" | "about" | "skills" | "projects" | "experience" | "contact";
-const NAV = [
-  { id: "home", label: "Accueil" },
-  { id: "about", label: "À propos" },
-  { id: "skills", label: "Compétences" },
-  { id: "projects", label: "Projets" },
+import { useEffect, useMemo, useRef, useState } from "react";
+import { motion } from "framer-motion";
+
+type Item = { id: string; label: string };
+
+const NAV_ITEMS: Item[] = [
+  { id: "home",       label: "Accueil" },
+  { id: "about",      label: "À propos" },
+  { id: "skills",     label: "Compétences" },
+  { id: "projects",   label: "Projets" },
   { id: "experience", label: "Expérience" },
-  { id: "contact", label: "Contact" },
-] as const;
+  { id: "runbooks",    label: "Runbook" },            // ⬅️ ajouté
+  { id: "contact",    label: "Contact" },
+];
 
 export default function Navbar() {
-  const [active, setActive] = useState<SectionId>("home");
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [indicator, setIndicator] = useState({ left: 6, width: 0 });
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  const itemRefs = useRef<Record<string, HTMLAnchorElement | null>>({});
-  const { scrollYProgress } = useScroll();
-const scrollSpring = useSpring(scrollYProgress, { stiffness: 260, damping: 30, mass: 0.4 });
+  const [active, setActive] = useState<string>("home");
 
-  
+  // refs pour calculer la position/largeur de l’onglet actif
+  const btnRefs = useRef<Record<string, HTMLButtonElement | null>>({});
+  const [pill, setPill] = useState<{ left: number; width: number }>({
+    left: 0,
+    width: 0,
+  });
 
+  // met à jour la “pill” quand l’onglet actif change ou au resize
   useEffect(() => {
-    const onScroll = () => setIsScrolled(window.scrollY > 10);
-    onScroll(); window.addEventListener("scroll", onScroll);
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+    const el = btnRefs.current[active];
+    if (!el) return;
+    const update = () =>
+      setPill({ left: el.offsetLeft, width: el.offsetWidth });
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    window.addEventListener("resize", update);
+    return () => {
+      window.removeEventListener("resize", update);
+      ro.disconnect();
+    };
+  }, [active]);
 
+  // scroll-spy: change l’onglet actif en fonction des sections visibles
   useEffect(() => {
-    const sections = NAV.map(n => document.getElementById(n.id)).filter(Boolean) as HTMLElement[];
-    const obs = new IntersectionObserver((entries) => {
-      const vis = entries.filter(e => e.isIntersecting).sort((a,b)=>b.intersectionRatio-a.intersectionRatio)[0];
-      if (vis?.target?.id) setActive(vis.target.id as SectionId);
-    }, { rootMargin: "0px 0px -60% 0px", threshold: [0.1, 0.3, 0.6] });
-    sections.forEach(s => obs.observe(s));
+    const obs = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (e.isIntersecting) {
+            setActive(e.target.id);
+          }
+        }
+      },
+      {
+        // déclenche quand ~le milieu de la section est dans la fenêtre
+        rootMargin: "-45% 0px -45% 0px",
+        threshold: 0.01,
+      }
+    );
+
+    NAV_ITEMS.forEach(({ id }) => {
+      const sec = document.getElementById(id);
+      if (sec) obs.observe(sec);
+    });
+
     return () => obs.disconnect();
   }, []);
 
-  const pos = () => {
-    const el = itemRefs.current[active]; const wrap = containerRef.current;
-    if (!el || !wrap) return;
-    const r = el.getBoundingClientRect(), w = wrap.getBoundingClientRect();
-    setIndicator({ left: r.left - w.left, width: r.width });
+  const onClick = (id: string) => {
+    const sec = document.getElementById(id);
+    if (sec) sec.scrollIntoView({ behavior: "smooth", block: "start" });
   };
-  useEffect(() => { pos(); const on = () => pos(); window.addEventListener("resize", on); return () => window.removeEventListener("resize", on); }, [active]);
-
-  const go = (id: SectionId) => (e: React.MouseEvent) => { e.preventDefault(); document.getElementById(id)?.scrollIntoView({ behavior: "smooth" }); setActive(id); };
 
   return (
-    <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50">
-      <a href="#content" className="sr-only focus:not-sr-only absolute -left-20 top-0 rounded bg-neutral-900 px-3 py-2">Aller au contenu</a>
-      <div ref={containerRef} className={`relative flex items-center gap-1 rounded-full border px-2 py-1
-        ${isScrolled ? "bg-neutral-900/70 border-neutral-800 backdrop-blur-md shadow-lg shadow-black/30" : "bg-neutral-900/50 border-neutral-900 backdrop-blur-sm"}`}>
-        {/* slider */}
-        <motion.span className="absolute top-1 bottom-1 rounded-full bg-primary/15 border border-primary/30"
-          animate={{ left: indicator.left, width: indicator.width }} transition={{ type: "spring", stiffness: 420, damping: 32 }} />
-        {/* items */}
-        {NAV.map(n => (
-          <a key={n.id} href={`#${n.id}`} ref={el => (itemRefs.current[n.id] = el)} onClick={go(n.id)}
-             className={`relative z-10 px-3 py-2 rounded-full text-sm ${active===n.id?"text-white":"text-neutral-400 hover:text-neutral-200"}`}>
-            {n.label}
-          </a>
-        ))}
-        {/* fine progress bar en bas de la pill */}
+    <div className="fixed inset-x-0 top-4 z-50 flex justify-center">
+      <nav
+        className="
+          relative inline-flex items-center gap-1
+          rounded-full border border-white/10 bg-white/5 px-1 py-1
+          backdrop-blur shadow-sm shadow-black/20
+        "
+        aria-label="Navigation principale"
+      >
+        {/* pill animée sous l’onglet actif */}
         <motion.span
-  className="absolute bottom-0 left-0 h-[2px] w-full rounded-full bg-primary/40 origin-left"
-  style={{ scaleX: scrollSpring }}
-/>
-      </div>
+          className="absolute top-1 bottom-1 rounded-full bg-white/10"
+          animate={{ left: pill.left, width: pill.width }}
+          transition={{ type: "spring", stiffness: 380, damping: 30 }}
+          aria-hidden
+        />
+
+        {NAV_ITEMS.map(({ id, label }) => (
+          <button
+            key={id}
+            ref={(el) => (btnRefs.current[id] = el)}
+            onClick={() => onClick(id)}
+            className={`
+              relative z-10 rounded-full px-3.5 py-2 text-sm
+              text-neutral-200 hover:text-white
+              transition-colors
+              ${active === id ? "font-medium" : "font-normal"}
+            `}
+            aria-current={active === id ? "page" : undefined}
+          >
+            {label}
+          </button>
+        ))}
+      </nav>
     </div>
   );
 }

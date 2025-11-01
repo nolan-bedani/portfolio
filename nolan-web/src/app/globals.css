@@ -9,6 +9,8 @@
   --bg-c:#0E1324;  /* bas */
   --accent:#B9A2F5;
   --accent-dark:#6F5BD5;
+  --nav-h: 96px; /* adapte si ta navbar est plus petite/grande */
+
 }
 html{ scroll-behavior:smooth; }
 body{ @apply text-neutral-100 overflow-x-hidden; }

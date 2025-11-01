@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Inter } from "next/font/google";
-import FloatingCV from "../components/FloatingCV"; // ou "../components/FloatingCV"
+
+import Navbar from "../components/Navbar";
+import FloatingCV from "../components/FloatingCV";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -17,10 +19,14 @@ export default function RootLayout({
 }) {
   return (
     <html lang="fr" suppressHydrationWarning>
-      <body className={`bg-app ${inter.className}`}>
+      <body className={`bg-app bg-aurora min-h-screen ${inter.className}`}>
+        {/* Barre de nav toujours présente */}
+        <Navbar />
+
+        {/* Contenu de la page */}
         {children}
 
-        {/* Bouton CV flottant rendu côté client */}
+        {/* Bouton flottant “télécharger mon CV” (icône seule) */}
         <FloatingCV />
       </body>
     </html>
